@@ -4,6 +4,7 @@ let pitch;
 let mic;
 let freq = 0;
 let threshold = 1;
+let freqhistory=[];
 
 let notes = [
   {
@@ -38,8 +39,39 @@ function listening() {
   pitch = ml5.pitchDetection(model_url, audioContext, mic.stream, modelLoaded);
 }
 
+
+function gotPitch(error, frequency) {
+  if (error) {
+    console.error(error);
+  } else {
+    //console.log(frequency);
+    if (frequency) {
+      freq = frequency;
+      
+      console.log(freqhistory);
+    }
+    
+    pitch.getPitch(gotPitch);
+  }
+}
 function draw() {
   background(0);
+  freqhistory.push(freq);
+  stroke(255);
+  noFill();
+  beginShape();
+  for(var i=0;i<freqhistory.length;i++){
+    var y = map(freqhistory[i], 150, 1800, height-200, height-400);
+    vertex(i, y);
+}
+endShape();
+
+if (freqhistory.length > width-30) {
+    freqhistory.splice(0, 1);
+  }
+  stroke(255, 0, 0);
+  line(freqhistory.length, 0, freqhistory.length, height);
+
   textAlign(CENTER, CENTER);
   fill(255);
   textSize(32);
@@ -58,13 +90,15 @@ function draw() {
   textSize(64);
   text(closestNote.note, width / 2, height - 50);
 
-  let diff = recordDiff;
+  //let diff = recordDiff;
   // let amt = map(diff, -100, 100, 0, 1);
   // let r = color(255, 0, 0);
   // let g = color(0, 255, 0);
   // let col = lerpColor(g, r, amt);
 
-  let alpha = map(abs(diff), 0, 100, 255, 0);
+
+  
+  /* let alpha = map(abs(diff), 0, 100, 255, 0);
   rectMode(CENTER);
   fill(255, alpha);
   stroke(255);
@@ -83,7 +117,7 @@ function draw() {
   if (abs(diff) < threshold) {
     fill(0, 255, 0);
   }
-  rect(200 + diff / 2, 100, 10, 75);
+  rect(200 + diff / 2, 100, 10, 75); */
 }
 
 function modelLoaded() {
@@ -92,18 +126,7 @@ function modelLoaded() {
   pitch.getPitch(gotPitch);
 }
 
-function gotPitch(error, frequency) {
-  if (error) {
-    console.error(error);
-  } else {
-    //console.log(frequency);
-    if (frequency) {
-      freq = frequency;
-    }
-    
-    pitch.getPitch(gotPitch);
-  }
-}
+
 
  /* Plotly.plot(document.querySelector(".wrapper"),[{
   y:[getData()],
